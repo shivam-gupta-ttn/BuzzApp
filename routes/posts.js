@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const Post = require("../models/post")
+const User = require("../models/user")
 //create a post 
 
 router.post("/", async (req, res) => {
@@ -43,16 +44,40 @@ router.delete("/:id", async (req, res) => {
         res.status(400).json(err)
     }
 })
-//like or dislike a post
+//like a post
 router.put("/:id/like", async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post.likes.includes(req.body.userId)) {
-            await post.updateOne({ $push: { likes: req.body.userId } });
-            res.status(200).json("the post has been liked")
+            if(!post.dislikes.includes(req.body.userId)){
+
+                await post.updateOne({ $push: { likes: req.body.userId } });
+                res.status(200).json("the post has been liked")
+            }else{
+                res.status(200).json("the post is disliked by you")
+            }
         } else {
             await post.updateOne({ $pull: { likes: req.body.userId } })
-            res.status(200).json("the post has been disliked")
+            res.status(200).json("the post has been removed from likes")
+        }
+    } catch (err) {
+        res.status(400).json(err)
+    }
+})
+//dislike a post
+router.put("/:id/dislike", async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post.dislikes.includes(req.body.userId)) {
+            if(!post.likes.includes(req.body.userId)){
+                await post.updateOne({ $push: { dislikes: req.body.userId } });
+                res.status(200).json("the post has been disliked")
+            }else{
+                res.status(200).json("The post is liked by you")
+            }
+        } else {
+            await post.updateOne({ $pull: { dislikes: req.body.userId } })
+            res.status(200).json("the post has been removed from dislikes")
         }
     } catch (err) {
         res.status(400).json(err)
@@ -69,10 +94,20 @@ router.get("/:id", async (req, res) => {
 })
 
 //get timeline posts
-router.get("/timeline", async (req, res) => {
-    let postArray = [];
+router.get("/post/all", async (req, res) => {
     try {
-        const currentUser = await User.findById
+        console.log("reached")
+        const currentUser = await User.findById(req.body.userId);
+        console.log(currentUser)
+        const userPosts = await Post.find({userId: currentUser._id}).sort({createdAt:-1})
+        const friendPosts = await Promise.all(
+            currentUser.friends.map((id)=>{
+            return Post.find({userId:id}).sort({createdAt:-1});
+            })
+        );
+
+        console.log("reached")
+        res.json(userPosts.concat(...friendPosts))
     } catch (err) {
         res.status(400).json(err)
     }
@@ -80,7 +115,7 @@ router.get("/timeline", async (req, res) => {
 //post a comment
 router.post("/:id/comment",async(req,res)=>{
     try{
-    const post = await Post.findByIdAndUpdate(req.params.id,{$push:{comments:{commentedBy:req.body.userId}}})        
+    const post = await Post.findByIdAndUpdate(req.params.id,{$push:{comments:{comment:req.body.comment,commentedBy:req.body.userId}}})        
     res.status(200).json(post)
     }catch(err){
         res.status(400).json(err)

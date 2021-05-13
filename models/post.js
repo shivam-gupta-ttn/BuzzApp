@@ -14,6 +14,10 @@ const PostSchema = new mongoose.Schema({
         type:Array,
         default:[]
     },
+    dislikes:{
+        type:Array,
+        default:[]
+    },
     comments:[{
         comment:{type:String,max:500,required:false},
         commentedBy:{type:String}
