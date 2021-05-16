@@ -96,18 +96,14 @@ router.get("/:id", async (req, res) => {
 //get timeline posts
 router.get("/post/all", async (req, res) => {
     try {
-        console.log("reached")
         const currentUser = await User.findById(req.body.userId);
-        console.log(currentUser)
         const userPosts = await Post.find({userId: currentUser._id}).sort({createdAt:-1})
         const friendPosts = await Promise.all(
             currentUser.friends.map((id)=>{
             return Post.find({userId:id}).sort({createdAt:-1});
             })
         );
-
-        console.log("reached")
-        res.json(userPosts.concat(...friendPosts))
+        res.status(200).json(userPosts.concat(...friendPosts))
     } catch (err) {
         res.status(400).json(err)
     }
@@ -121,5 +117,19 @@ router.post("/:id/comment",async(req,res)=>{
         res.status(400).json(err)
     }
 })
-
+//flag a post
+router.put("/:id/flag",async(req,res)=>{
+    const post = await Post.findById(req.params.id)
+    try{
+        if(!post.flagged.includes(req.body.userId)){
+            await post.updateOne({$push:{flagged:req.body.userId}})
+            res.status(200).json("Post flagged successfully")
+        }else{
+            res.status(200).json("you already flagged this post")
+        }
+    }catch(err){
+        json.status(400).json(err)
+    }
+})
+// respond to flag post
 module.exports = router;

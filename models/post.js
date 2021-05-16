@@ -21,7 +21,11 @@ const PostSchema = new mongoose.Schema({
     comments:[{
         comment:{type:String,max:500,required:false},
         commentedBy:{type:String}
-    }]
+    }],
+    flagged:{
+        type:Array,
+        default:[]
+    }
 },
 {timestamps:true}
 );

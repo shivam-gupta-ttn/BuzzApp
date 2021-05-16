@@ -3,7 +3,6 @@ const User = require("../models/user");
 
 //udpate a user
 router.put("/:id", async (req, res) => {
-    console.log(req.body)
     if (req.body.userId === req.params.id || req.user.isAdmin) {
         try {
             const user = await User.findByIdAndUpdate(req.params.id, {
@@ -30,23 +29,19 @@ router.get("/:id", async (req, res) => {
 
 //send request 
 router.put("/:id/addfriend", async (req, res) => {
-    console.log("reached")
     if (req.body.userId !== req.params.id) {
-        console.log("reached")
         try {
             const user = await User.findById(req.params.id);
             const currentUser = await User.findById(req.body.userId)
-            console.log(user)
-            console.log(currentUser)
-            console.log("reached")
+
             if (!user.friends.includes(req.body.userId)) {
-                console.log("reached")
+
 
                 if (!user.friendRequests.incoming.includes(req.body.userId)) {
-                    console.log("reached")
+
 
                     if (!user.friendRequests.outgoing.includes(req.body.userId)) {
-                        console.log("reached")
+
                         await user.updateOne({ $push: { friendRequests: { incoming: req.body.userId } } })
                         await currentUser.updateOne({ $push: { friendRequests: { outgoing: req.params.id } } })
                         res.status(200).json("Friend request sent")
@@ -99,17 +94,65 @@ router.put("/:id/reject", async (req, res) => {
                 await User.findByIdAndUpdate(req.params.id, { $pull: { friendRequests: { outgoing: req.body.userId } } });
                 await User.findByIdAndUpdate(req.body.userId, { $pull: { friendRequests: { incoming: req.params.id } } });
                 res.status(200).json("friend request rejected!")
-            }else{
+            } else {
                 res.status(403).json("No friend request from this user")
             }
-        }else{
+        } else {
             res.status(403).json("No friend request from this user 1")
         }
     } catch (err) {
         res.status(403).json(err)
     }
 })
+//suggestions
+router.get("/suggestions/all", async (req, res) => {
 
-//remove user as friend / unfollow a user
+    try {
+        const currentUser = await User.findById(req.body.userId)
+        const allUsers = await User.find({}, { _id: 1 })
+        const users = allUsers.map((obj) => {
+            return obj._id;
+        })
+
+        let suggestedFriends = users.filter((val) => {
+            return currentUser.friends.indexOf(val) == -1;
+        })
+
+        const current = req.body.userId
+
+        let index = -1;
+        suggestedFriends.forEach((val, i) => {
+            if (val == current) {
+                index = i;
+            }
+        })
+        suggestedFriends.splice(index, 1)
+        suggestedFriends = await Promise.all(
+            suggestedFriends.map((id) => {
+                return User.find({ _id: id })
+            })
+        )
+        res.status(200).json(suggestedFriends)
+    } catch (err) {
+        res.status(400).json(err)
+    }
+})
+//friends
+router.get("/friends/all",async (req,res)=>{
+    try{
+        const currentUser = await User.findById(req.body.userId)
+        const friends = await Promise.all(
+            currentUser.friends.map((id)=>{
+                return User.find({_id:id},{name:1,fname:1,lname:1})
+            })
+        )
+        res.status(200).json(friends)   
+
+    }catch(err){
+        res.status(400).json(err)
+    }
+})
+
+//remove user as friend 
 
 module.exports = router;

@@ -19,12 +19,11 @@ const UserSchema = new mongoose.Schema({
         type: String,
         min: 6
     },
-    name: {
+    fname: {
         type: String,
     },
-    age: {
-        type: Number,
-        default: ""
+    lname:{
+        type:String
     },
     gender: {
         type: String,
@@ -38,9 +37,12 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
-    coverPicture: {
-        type: String,
-        default: ""
+    website:{
+        type:String,
+        default:""
+    },
+    Birthday:{
+        type:Date
     },
     friends: {
         type: Array,
