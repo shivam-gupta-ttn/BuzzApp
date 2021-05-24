@@ -16,6 +16,17 @@ router.put("/:id", async (req, res) => {
         return res.status(403).json("You can update only your account!")
     }
 })
+//get current user
+router.get("/currentuser",async (req,res)=>{
+    try{
+        const currentUser = await User.findOne({email:req.user?._json?.email})
+        res.status(200).json(currentUser)
+
+    }catch(err){
+        return res.status(400).json(err)
+    }
+})
+
 //get a user
 router.get("/:id", async (req, res) => {
     try {
