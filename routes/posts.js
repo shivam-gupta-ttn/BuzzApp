@@ -49,11 +49,11 @@ router.put("/:id/like", async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post.likes.includes(req.body.userId)) {
-            if(!post.dislikes.includes(req.body.userId)){
+            if (!post.dislikes.includes(req.body.userId)) {
 
                 await post.updateOne({ $push: { likes: req.body.userId } });
                 res.status(200).json("the post has been liked")
-            }else{
+            } else {
                 res.status(200).json("the post is disliked by you")
             }
         } else {
@@ -69,10 +69,10 @@ router.put("/:id/dislike", async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post.dislikes.includes(req.body.userId)) {
-            if(!post.likes.includes(req.body.userId)){
+            if (!post.likes.includes(req.body.userId)) {
                 await post.updateOne({ $push: { dislikes: req.body.userId } });
                 res.status(200).json("the post has been disliked")
-            }else{
+            } else {
                 res.status(200).json("The post is liked by you")
             }
         } else {
@@ -97,10 +97,10 @@ router.get("/:id", async (req, res) => {
 router.get("/post/all", async (req, res) => {
     try {
         const currentUser = await User.findById(req.body.userId);
-        const userPosts = await Post.find({userId: currentUser._id}).sort({createdAt:-1})
+        const userPosts = await Post.find({ userId: currentUser._id }).sort({ createdAt: -1 })
         const friendPosts = await Promise.all(
-            currentUser.friends.map((id)=>{
-            return Post.find({userId:id}).sort({createdAt:-1});
+            currentUser.friends.map((id) => {
+                return Post.find({ userId: id }).sort({ createdAt: -1 });
             })
         );
         res.status(200).json(userPosts.concat(...friendPosts))
@@ -109,25 +109,25 @@ router.get("/post/all", async (req, res) => {
     }
 })
 //post a comment
-router.post("/:id/comment",async(req,res)=>{
-    try{
-    const post = await Post.findByIdAndUpdate(req.params.id,{$push:{comments:{comment:req.body.comment,commentedBy:req.body.userId}}})        
-    res.status(200).json(post)
-    }catch(err){
+router.post("/:id/comment", async (req, res) => {
+    try {
+        const post = await Post.findByIdAndUpdate(req.params.id, { $push: { comments: { comment: req.body.comment, commentedBy: req.body.userId } } })
+        res.status(200).json(post)
+    } catch (err) {
         res.status(400).json(err)
     }
 })
 //flag a post
-router.put("/:id/flag",async(req,res)=>{
+router.put("/:id/flag", async (req, res) => {
     const post = await Post.findById(req.params.id)
-    try{
-        if(!post.flagged.includes(req.body.userId)){
-            await post.updateOne({$push:{flagged:req.body.userId}})
+    try {
+        if (!post.flagged.includes(req.body.userId)) {
+            await post.updateOne({ $push: { flagged: req.body.userId } })
             res.status(200).json("Post flagged successfully")
-        }else{
+        } else {
             res.status(200).json("you already flagged this post")
         }
-    }catch(err){
+    } catch (err) {
         json.status(400).json(err)
     }
 })

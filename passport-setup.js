@@ -14,8 +14,6 @@ passport.use(new GoogleStrategy({
    async function(accessToken, refreshToken, profile, done) {
     if (await User.exists({ googleId: profile.id })) {
       await User.findOne({ googleId: profile.id }, function (err, user) {
-          console.log("found===>>", profile)
-          console.log("json===>",profile._json)
           console.log(err)
           return done(err, profile);
       });
@@ -26,7 +24,6 @@ passport.use(new GoogleStrategy({
         fname:profile._json.name,
         profilePicture:profile._json.picture
        }, function (err, user) {
-          console.log("created====>", profile)
           return done(err, profile);
       })
   }

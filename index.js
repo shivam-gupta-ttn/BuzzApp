@@ -6,6 +6,7 @@ const morgan = require("morgan");
 const passport = require("passport");
 const bodyParser = require("body-parser");
 const session = require('express-session')
+const cors = require('cors')
 
 const userRoute = require("./routes/users");
 const authRoute = require("./routes/auth");
@@ -20,11 +21,15 @@ mongoose.connect('mongodb://localhost:27017/buzzApp', {useNewUrlParser: true},()
 require("./passport-setup")
 
 //middlewares
+
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
-
+app.use(cors({
+    origin:"http://localhost:3000",
+    credentials:true
+}));
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -33,14 +38,13 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 app.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })
     );
 
 app.get('/auth/google/buzz',(req,res,next)=>{console.log("reached")
 next(); },
-    passport.authenticate('google', { failureRedirect: '/login',successRedirect:'/' }),
+    passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login',successRedirect:'http://localhost:3000/home' }),
     );
 
 app.get('/', isLoggedIn, (req,res)=>{

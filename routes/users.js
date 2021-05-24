@@ -29,20 +29,21 @@ router.get("/:id", async (req, res) => {
 
 //send request 
 router.put("/:id/addfriend", async (req, res) => {
-    if (req.body.userId !== req.params.id) {
+    const currentUser = await User.findOne({email:req.body.email})
+    console.log(currentUser._id)
+
+    if (currentUser._id !== req.params.id) {
         try {
             const user = await User.findById(req.params.id);
-            const currentUser = await User.findById(req.body.userId)
-
-            if (!user.friends.includes(req.body.userId)) {
+            if (!user.friends.includes(currentUser._id)) {
 
 
-                if (!user.friendRequests.incoming.includes(req.body.userId)) {
+                if (!user.friendRequests.incoming.includes(currentUser._id)) {
 
 
-                    if (!user.friendRequests.outgoing.includes(req.body.userId)) {
+                    if (!user.friendRequests.outgoing.includes(currentUser._id)) {
 
-                        await user.updateOne({ $push: { friendRequests: { incoming: req.body.userId } } })
+                        await user.updateOne({ $push: { friendRequests: { incoming: currentUser._id } } })
                         await currentUser.updateOne({ $push: { friendRequests: { outgoing: req.params.id } } })
                         res.status(200).json("Friend request sent")
                     } else {
@@ -108,7 +109,7 @@ router.put("/:id/reject", async (req, res) => {
 router.get("/suggestions/all", async (req, res) => {
 
     try {
-        const currentUser = await User.findById(req.body.userId)
+        const currentUser = await User.findOne({email:req.user?._json?.email})
         const allUsers = await User.find({}, { _id: 1 })
         const users = allUsers.map((obj) => {
             return obj._id;
@@ -140,16 +141,18 @@ router.get("/suggestions/all", async (req, res) => {
 //friends
 router.get("/friends/all",async (req,res)=>{
     try{
-        const currentUser = await User.findById(req.body.userId)
+       
+        const currentUser = await User.findOne({email : req.user?._json?.email})
         const friends = await Promise.all(
             currentUser.friends.map((id)=>{
                 return User.find({_id:id},{name:1,fname:1,lname:1})
             })
         )
         res.status(200).json(friends)   
+      
 
     }catch(err){
-        res.status(400).json(err)
+        res.status(401).json(err)
     }
 })
 
