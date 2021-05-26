@@ -19,11 +19,8 @@ const UserSchema = new mongoose.Schema({
         type: String,
         min: 6
     },
-    fname: {
+    name: {
         type: String,
-    },
-    lname:{
-        type:String
     },
     gender: {
         type: String,
@@ -37,26 +34,20 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
-    website:{
-        type:String,
-        default:""
+    website: {
+        type: String,
+        default: ""
     },
-    Birthday:{
-        type:Date
+    Birthday: {
+        type: Date
     },
     friends: {
         type: Array,
         default: []
     },
     friendRequests: {
-        outgoing: {
-            type:Array,
-            default:[]
-        },
-        incoming:{
-            type:Array,
-            default:[]
-        },
+        incoming:{type:Array,default:[]},
+        outgoing:{type:Array,default:[]}
     },
     isAdmin: {
         type: Boolean,

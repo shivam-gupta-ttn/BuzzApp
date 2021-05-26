@@ -21,7 +21,7 @@ passport.use(new GoogleStrategy({
       await User.create({ 
         googleId: profile.id,
         email: profile._json.email,
-        fname:profile._json.name,
+        name:profile._json.name,
         profilePicture:profile._json.picture
        }, function (err, user) {
           return done(err, profile);

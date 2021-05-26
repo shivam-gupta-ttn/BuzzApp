@@ -3,13 +3,20 @@ const Post = require("../models/post")
 const User = require("../models/user")
 //create a post 
 
-router.post("/", async (req, res) => {
-    const newPost = new Post(req.body)
-    try {
-        const savedPost = await newPost.save();
-        res.status(200).json(savedPost)
-    } catch (err) {
-        res.status(400).json(err)
+router.post("/:id/post", async (req, res) => {
+    if (req.body.desc === "") {
+        res.status(400).json("Invalid Post or Post cannot be empty String")
+    } else {
+        try {
+            const newPost = new Post({
+                userId: req.params.id,
+                desc: req.body.desc
+            })
+            const savedPost = await newPost.save();
+            res.status(200).json(savedPost)
+        } catch (err) {
+            res.status(400).json(err)
+        }
     }
 })
 //update a post
@@ -31,9 +38,10 @@ router.put("/:id", async (req, res) => {
 
 //delete a post
 router.delete("/:id", async (req, res) => {
+    const currentUser = await User.findOne({email:req.user?._json?.email});
     try {
         const post = await Post.findById(req.params.id);
-        if (post.userId === req.body.userId) {
+        if (post.userId.toString() === currentUser._id.toString()) {
             await post.deleteOne();
             res.status(200).json("the post has been deleted")
         } else {
@@ -46,18 +54,18 @@ router.delete("/:id", async (req, res) => {
 })
 //like a post
 router.put("/:id/like", async (req, res) => {
+    const currentUser = await User.findOne({email:req.user?._json?.email})
     try {
         const post = await Post.findById(req.params.id);
-        if (!post.likes.includes(req.body.userId)) {
-            if (!post.dislikes.includes(req.body.userId)) {
-
-                await post.updateOne({ $push: { likes: req.body.userId } });
+        if (!post.likes.includes(currentUser._id)) {
+            if (!post.dislikes.includes(currentUser._id)) {
+                await post.updateOne({ $push: { likes: currentUser._id } });
                 res.status(200).json("the post has been liked")
             } else {
                 res.status(200).json("the post is disliked by you")
             }
         } else {
-            await post.updateOne({ $pull: { likes: req.body.userId } })
+            await post.updateOne({ $pull: { likes: currentUser._id } })
             res.status(200).json("the post has been removed from likes")
         }
     } catch (err) {
@@ -66,17 +74,18 @@ router.put("/:id/like", async (req, res) => {
 })
 //dislike a post
 router.put("/:id/dislike", async (req, res) => {
+    const currentUser = await User.findOne({email:req.user?._json?.email})
     try {
         const post = await Post.findById(req.params.id);
-        if (!post.dislikes.includes(req.body.userId)) {
-            if (!post.likes.includes(req.body.userId)) {
-                await post.updateOne({ $push: { dislikes: req.body.userId } });
+        if (!post.dislikes.includes(currentUser._id)) {
+            if (!post.likes.includes(currentUser._id)) {
+                await post.updateOne({ $push: { dislikes: currentUser._id } });
                 res.status(200).json("the post has been disliked")
             } else {
                 res.status(200).json("The post is liked by you")
             }
         } else {
-            await post.updateOne({ $pull: { dislikes: req.body.userId } })
+            await post.updateOne({ $pull: { dislikes: currentUser._id } })
             res.status(200).json("the post has been removed from dislikes")
         }
     } catch (err) {
@@ -96,7 +105,7 @@ router.get("/:id", async (req, res) => {
 //get timeline posts
 router.get("/post/all", async (req, res) => {
     try {
-        const currentUser = await User.findById(req.body.userId);
+        const currentUser = await User.findOne({email:req.user?._json?.email});
         const userPosts = await Post.find({ userId: currentUser._id }).sort({ createdAt: -1 })
         const friendPosts = await Promise.all(
             currentUser.friends.map((id) => {
@@ -119,10 +128,11 @@ router.post("/:id/comment", async (req, res) => {
 })
 //flag a post
 router.put("/:id/flag", async (req, res) => {
+    const currentUser = await User.findOne({email:req.user?._json?.email});
     const post = await Post.findById(req.params.id)
     try {
-        if (!post.flagged.includes(req.body.userId)) {
-            await post.updateOne({ $push: { flagged: req.body.userId } })
+        if (!post.flagged.includes(currentUser._id)) {
+            await post.updateOne({ $push: { flagged: currentUser._id } })
             res.status(200).json("Post flagged successfully")
         } else {
             res.status(200).json("you already flagged this post")
