@@ -118,9 +118,10 @@ router.get("/post/all", async (req, res) => {
     }
 })
 //post a comment
-router.post("/:id/comment", async (req, res) => {
+router.put("/:id/comment", async (req, res) => {
+    const currentUser = await User.findOne({email:req.user?._json?.email})
     try {
-        const post = await Post.findByIdAndUpdate(req.params.id, { $push: { comments: { comment: req.body.comment, commentedBy: req.body.userId } } })
+        const post = await Post.findByIdAndUpdate(req.params.id, { $push: { comments: { comment: req.body.value, commentedBy: currentUser._id } } })
         res.status(200).json(post)
     } catch (err) {
         res.status(400).json(err)

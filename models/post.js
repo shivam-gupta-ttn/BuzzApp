@@ -19,7 +19,7 @@ const PostSchema = new mongoose.Schema({
         default:[]
     },
     comments:[{
-        comment:{type:String,max:500,required:false},
+        comment:{type:String,max:500},
         commentedBy:{type:String}
     }],
     flagged:{

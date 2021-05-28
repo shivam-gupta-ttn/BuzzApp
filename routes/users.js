@@ -51,7 +51,7 @@ router.put("/:id/addfriend", async (req, res) => {
                         await currentUser.updateOne({ $push: { 'friendRequests.outgoing': user._id } })
                         await user.updateOne({ $push: { 'friendRequests.incoming': currentUser?._id } })
                         res.status(201).json("Friend request sent")
-                    } else { 
+                    } else {
                         res.status(200).json("User already sent you a request!!")
                     }
                 } else {
@@ -69,16 +69,15 @@ router.put("/:id/addfriend", async (req, res) => {
 })
 // accept request
 router.put("/:id/accept", async (req, res) => {
-
+    const currentUser = await User.findOne({ email: req.user?._json?.email })
     try {
         const user = await User.findById(req.params.id);
-        const currentUser = await User.findById(req.body.userId)
         if (currentUser.friendRequests.incoming.includes(req.params.id)) {
-            if (user.friendRequests.outgoing.includes(req.body.userId)) {
-                await User.findByIdAndUpdate(req.params.id, { $push: { friends: req.body.userId } });
-                await User.findByIdAndUpdate(req.params.id, { $pull: { friendRequests: { outgoing: req.body.userId } } });
-                await User.findByIdAndUpdate(req.body.userId, { $push: { friends: req.params.id } });
-                await User.findByIdAndUpdate(req.body.userId, { $pull: { friendRequests: { incoming: req.params.id } } });
+            if (user.friendRequests.outgoing.includes(currentUser._id)) {
+                await currentUser.updateOne({ $push: { friends: user._id } })
+                await user.updateOne({ $push: { friends: currentUser._id } })
+                await currentUser.updateOne({ $pull: { 'friendRequests.incoming': user._id } })
+                await user.updateOne({ $pull: { 'friendRequests.outgoing': currentUser._id } })
                 res.status(200).json("friend request accepted!")
             } else {
                 res.status(403).json("No friend request from this user")
@@ -92,13 +91,13 @@ router.put("/:id/accept", async (req, res) => {
 })
 //reject request
 router.put("/:id/reject", async (req, res) => {
+    const currentUser = await User.findOne({ email: req.user?._json?.email })
+    const user = await User.findById(req.params.id);
     try {
-        const user = await User.findById(req.params.id);
-        const currentUser = await User.findById(req.body.userId)
-        if (currentUser.friendRequests.incoming.includes(req.params.id)) {
-            if (user.friendRequests.outgoing.includes(req.body.userId)) {
-                await User.findByIdAndUpdate(req.params.id, { $pull: { friendRequests: { outgoing: req.body.userId } } });
-                await User.findByIdAndUpdate(req.body.userId, { $pull: { friendRequests: { incoming: req.params.id } } });
+        if (currentUser.friendRequests.incoming.includes(user._id)) {
+            if (user.friendRequests.outgoing.includes(currentUser._id)) {
+                await currentUser.updateOne({ $pull: { 'friendRequests.incoming': user._id } })
+                await user.updateOne({ $pull: { 'friendRequests.outgoing': currentUser._id } })
                 res.status(200).json("friend request rejected!")
             } else {
                 res.status(403).json("No friend request from this user")
