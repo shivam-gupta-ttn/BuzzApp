@@ -3,10 +3,23 @@ const User = require("../models/user");
 
 //udpate a user
 router.put("/:id", async (req, res) => {
-    if (req.body.userId === req.params.id || req.user.isAdmin) {
+    const currentUser = await User.findOne({ email: req.user?._json?.email })
+    const user = await User.findById(req.params.id);
+    if (currentUser._id .toString() === user._id.toString()) {
         try {
-            const user = await User.findByIdAndUpdate(req.params.id, {
-                $set: req.body
+            console.log("here")
+             await User.findByIdAndUpdate(currentUser._id, {
+                $set: {
+                    name:req.body.fname+" "+req.body.lname,
+                    gender:req.body.gender,
+                    birthday:req.body.birthday,
+                    website:req.body.website,
+                    city:req.body.city,
+                    state:req.body.state,
+                    pin:req.body.pin,
+                    designation:req.body.designation,
+                    profilePicture:req.body.profilePicture
+                }
             });
             res.status(200).json("Account has been updated")
         } catch (err) {
@@ -115,8 +128,11 @@ router.get("/suggestions/all", async (req, res) => {
     try {
         const currentUser = await User.findOne({ email: req.user?._json?.email })
         const allUsers = await User.find({}, { _id: 1 })
-        let suggestedFriends = allUsers.map((obj) => {
-            return obj._id;
+        let suggestedFriends = []
+        allUsers.forEach((obj) => {
+            if(currentUser.friends.indexOf(obj._id) == -1){
+                suggestedFriends.push(obj._id)
+            }
         })
         let index = -1;
         suggestedFriends.forEach((val, i) => {

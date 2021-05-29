@@ -10,6 +10,10 @@ const PostSchema = new mongoose.Schema({
         type:String,
         max:500
     },
+    imgId:{
+        type:String,
+        default:""
+    },
     likes:{
         type:Array,
         default:[]

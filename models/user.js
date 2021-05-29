@@ -38,7 +38,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
-    Birthday: {
+    birthday: {
         type: Date
     },
     friends: {

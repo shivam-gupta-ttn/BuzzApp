@@ -22,7 +22,8 @@ passport.use(new GoogleStrategy({
         googleId: profile.id,
         email: profile._json.email,
         name:profile._json.name,
-        profilePicture:profile._json.picture
+        profilePicture:profile._json.picture,
+        friendRequests: [{incoming:[]},{outgoing:[]}]
        }, function (err, user) {
           return done(err, profile);
       })

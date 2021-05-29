@@ -4,13 +4,15 @@ const User = require("../models/user")
 //create a post 
 
 router.post("/:id/post", async (req, res) => {
-    if (req.body.desc === "") {
+    console.log(req.body)
+    if (req.body.desc === "" && req.body.imgId === "") {
         res.status(400).json("Invalid Post or Post cannot be empty String")
     } else {
         try {
             const newPost = new Post({
                 userId: req.params.id,
-                desc: req.body.desc
+                desc: req.body.desc,
+                imgId: req.body.imgId
             })
             const savedPost = await newPost.save();
             res.status(200).json(savedPost)
@@ -38,7 +40,7 @@ router.put("/:id", async (req, res) => {
 
 //delete a post
 router.delete("/:id", async (req, res) => {
-    const currentUser = await User.findOne({email:req.user?._json?.email});
+    const currentUser = await User.findOne({ email: req.user?._json?.email });
     try {
         const post = await Post.findById(req.params.id);
         if (post.userId.toString() === currentUser._id.toString()) {
@@ -54,7 +56,7 @@ router.delete("/:id", async (req, res) => {
 })
 //like a post
 router.put("/:id/like", async (req, res) => {
-    const currentUser = await User.findOne({email:req.user?._json?.email})
+    const currentUser = await User.findOne({ email: req.user?._json?.email })
     try {
         const post = await Post.findById(req.params.id);
         if (!post.likes.includes(currentUser._id)) {
@@ -74,7 +76,7 @@ router.put("/:id/like", async (req, res) => {
 })
 //dislike a post
 router.put("/:id/dislike", async (req, res) => {
-    const currentUser = await User.findOne({email:req.user?._json?.email})
+    const currentUser = await User.findOne({ email: req.user?._json?.email })
     try {
         const post = await Post.findById(req.params.id);
         if (!post.dislikes.includes(currentUser._id)) {
@@ -104,22 +106,27 @@ router.get("/:id", async (req, res) => {
 
 //get timeline posts
 router.get("/post/all", async (req, res) => {
+    console.log(req.query)
+    let page = req.query.page;
     try {
-        const currentUser = await User.findOne({email:req.user?._json?.email});
-        const userPosts = await Post.find({ userId: currentUser._id }).sort({ createdAt: -1 })
+        const currentUser = await User.findOne({ email: req.user?._json?.email });
+
+            const userPosts = await Post.find({ userId: currentUser._id }).sort({ createdAt: -1 })
+        
         const friendPosts = await Promise.all(
             currentUser.friends.map((id) => {
                 return Post.find({ userId: id }).sort({ createdAt: -1 });
             })
         );
-        res.status(200).json(userPosts.concat(...friendPosts))
+        res.status(200).json(userPosts.concat(...friendPosts).slice(page*10-10,page*10))
+        
     } catch (err) {
         res.status(400).json(err)
     }
 })
 //post a comment
 router.put("/:id/comment", async (req, res) => {
-    const currentUser = await User.findOne({email:req.user?._json?.email})
+    const currentUser = await User.findOne({ email: req.user?._json?.email })
     try {
         const post = await Post.findByIdAndUpdate(req.params.id, { $push: { comments: { comment: req.body.value, commentedBy: currentUser._id } } })
         res.status(200).json(post)
@@ -129,7 +136,7 @@ router.put("/:id/comment", async (req, res) => {
 })
 //flag a post
 router.put("/:id/flag", async (req, res) => {
-    const currentUser = await User.findOne({email:req.user?._json?.email});
+    const currentUser = await User.findOne({ email: req.user?._json?.email });
     const post = await Post.findById(req.params.id)
     try {
         if (!post.flagged.includes(currentUser._id)) {
