@@ -10,15 +10,15 @@ router.put("/:id", async (req, res) => {
             console.log("here")
              await User.findByIdAndUpdate(currentUser._id, {
                 $set: {
-                    name:req.body.fname+" "+req.body.lname,
-                    gender:req.body.gender,
-                    birthday:req.body.birthday,
-                    website:req.body.website,
-                    city:req.body.city,
-                    state:req.body.state,
-                    pin:req.body.pin,
-                    designation:req.body.designation,
-                    profilePicture:req.body.profilePicture
+                    name:req.body.fname?req.body.fname+" "+req.body.lname:user.name,
+                    gender:req.body.gender?req.body.gender:user.gender,
+                    birthday:req.body.birthday?req.body.birthday:user.birthday,
+                    website:req.body.website?req.body.website:user.website,
+                    city:req.body.city?req.body.city:user.city,
+                    state:req.body.state?req.body.state:user.state,
+                    pin:req.body.pin?req.body.pin:user.pin,
+                    designation:req.body.designation?req.body.designation:user.designation,
+                    profilePicture:req.body.profilePicture?req.body.profilePicture:user.profilePicture
                 }
             });
             res.status(200).json("Account has been updated")

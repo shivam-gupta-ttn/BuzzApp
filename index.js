@@ -50,6 +50,11 @@ next(); },
 app.get('/', isLoggedIn, (req,res)=>{
     res.send("Successfully logged in")
 })
+app.get('/logout',(req,res)=>{
+    req.session.destroy(function (err) {
+      res.redirect('http://localhost:3000/login');
+     });
+  })
 
 app.use("/api/users",userRoute);
 app.use("/api/auth",authRoute);

@@ -43,7 +43,7 @@ router.delete("/:id", async (req, res) => {
     const currentUser = await User.findOne({ email: req.user?._json?.email });
     try {
         const post = await Post.findById(req.params.id);
-        if (post.userId.toString() === currentUser._id.toString()) {
+        if (post.userId.toString() === currentUser._id.toString()||currentUser.isAdmin) {
             await post.deleteOne();
             res.status(200).json("the post has been deleted")
         } else {
@@ -62,9 +62,9 @@ router.put("/:id/like", async (req, res) => {
         if (!post.likes.includes(currentUser._id)) {
             if (!post.dislikes.includes(currentUser._id)) {
                 await post.updateOne({ $push: { likes: currentUser._id } });
-                res.status(200).json("the post has been liked")
+                res.status(201).json("the post has been liked")
             } else {
-                res.status(200).json("the post is disliked by you")
+                res.status(403).json("the post is disliked by you")
             }
         } else {
             await post.updateOne({ $pull: { likes: currentUser._id } })
@@ -82,9 +82,9 @@ router.put("/:id/dislike", async (req, res) => {
         if (!post.dislikes.includes(currentUser._id)) {
             if (!post.likes.includes(currentUser._id)) {
                 await post.updateOne({ $push: { dislikes: currentUser._id } });
-                res.status(200).json("the post has been disliked")
+                res.status(201).json("the post has been disliked")
             } else {
-                res.status(200).json("The post is liked by you")
+                res.status(403).json("The post is liked by you")
             }
         } else {
             await post.updateOne({ $pull: { dislikes: currentUser._id } })
