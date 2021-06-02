@@ -15,7 +15,7 @@ const postRoute = require("./routes/posts");
 const app = express();
 dotenv.config();
 
-mongoose.connect('mongodb://localhost:27017/buzzApp', {useNewUrlParser: true},()=>{
+mongoose.connect('mongodb+srv://shivamttn:shivam123@cluster0.kg8bx.mongodb.net/myFirstDatabase?retryWrites=true&w=majority', {useNewUrlParser: true},()=>{
     console.log("connect to MongoDB")
 });
 require("./passport-setup")

@@ -5,20 +5,20 @@ const User = require("../models/user");
 router.put("/:id", async (req, res) => {
     const currentUser = await User.findOne({ email: req.user?._json?.email })
     const user = await User.findById(req.params.id);
-    if (currentUser._id .toString() === user._id.toString()) {
+    if (currentUser._id.toString() === user._id.toString()) {
         try {
             console.log("here")
-             await User.findByIdAndUpdate(currentUser._id, {
+            await User.findByIdAndUpdate(currentUser._id, {
                 $set: {
-                    name:req.body.fname?req.body.fname+" "+req.body.lname:user.name,
-                    gender:req.body.gender?req.body.gender:user.gender,
-                    birthday:req.body.birthday?req.body.birthday:user.birthday,
-                    website:req.body.website?req.body.website:user.website,
-                    city:req.body.city?req.body.city:user.city,
-                    state:req.body.state?req.body.state:user.state,
-                    pin:req.body.pin?req.body.pin:user.pin,
-                    designation:req.body.designation?req.body.designation:user.designation,
-                    profilePicture:req.body.profilePicture?req.body.profilePicture:user.profilePicture
+                    name: req.body.fname ? req.body.fname + " " + req.body.lname : "",
+                    gender: req.body.gender ? req.body.gender : "",
+                    birthday: req.body.birthday ? req.body.birthday : "",
+                    website: req.body.website ? req.body.website : "",
+                    city: req.body.city ? req.body.city : "",
+                    state: req.body.state ? req.body.state : "",
+                    pin: req.body.pin ? req.body.pin : "",
+                    designation: req.body.designation ? req.body.designation : "",
+                    profilePicture: req.body.profilePicture ? req.body.profilePicture : user.profilePicture
                 }
             });
             res.status(200).json("Account has been updated")
@@ -50,6 +50,23 @@ router.get("/:id", async (req, res) => {
         res.status(400).json(err)
     }
 })
+//verify admin
+router.put("/verify/user", async (req, res) => {
+    const currentUser = await User.findOne({ email: req.user?._json?.email })
+    try {
+        console.log("here")
+        if (currentUser.role !== "admin") {
+            if (req.body.password === "admin@123") {
+                await currentUser.updateOne({ $set: { role: "admin" } })
+                res.status(200).json("You are admin now")
+            }
+        } else {
+            res.status(400).json("you are already admin")
+        }
+    }catch(err){
+        res.status(400).json(err)
+    }
+})
 
 //send request 
 router.put("/:id/addfriend", async (req, res) => {
@@ -78,6 +95,22 @@ router.put("/:id/addfriend", async (req, res) => {
         }
     } else {
         res.status(403).json("you cannot add yourself")
+    }
+})
+//remove Friend
+router.put("/:id/removefriend", async (req, res) => {
+    const currentUser = await User.findOne({ email: req.user?._json?.email })
+    const user = await User.findById(req.params.id);
+    try {
+        if (currentUser.friends.includes(user?._id)) {
+            await currentUser.updateOne({ $pull: { friends: user._id } })
+            await user.updateOne({ $pull: { friends: currentUser._id } })
+        } else {
+            res.status(401).json("user is not your friend")
+        }
+    } catch (err) {
+        res.status(404).json(err)
+
     }
 })
 // accept request
@@ -130,7 +163,7 @@ router.get("/suggestions/all", async (req, res) => {
         const allUsers = await User.find({}, { _id: 1 })
         let suggestedFriends = []
         allUsers.forEach((obj) => {
-            if(currentUser.friends.indexOf(obj._id) == -1){
+            if (currentUser.friends.indexOf(obj._id) == -1) {
                 suggestedFriends.push(obj._id)
             }
         })
@@ -158,7 +191,7 @@ router.get("/friends/all", async (req, res) => {
         const currentUser = await User.findOne({ email: req.user?._json?.email })
         const friends = await Promise.all(
             currentUser.friends.map((id) => {
-                return User.find({ _id: id }, { name: 1, fname: 1, lname: 1 })
+                return User.find({ _id: id }, { name: 1, fname: 1, lname: 1, profilePicture: 1, email: 1 })
             })
         )
         res.status(200).json(friends)

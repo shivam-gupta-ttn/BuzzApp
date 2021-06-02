@@ -5,10 +5,7 @@ const UserSchema = new mongoose.Schema({
         type: String
     },
     username: {
-        type: String,
-        min: 3,
-        max: 20,
-        unique: true
+        type: String
     },
     email: {
         type: String,
@@ -49,9 +46,10 @@ const UserSchema = new mongoose.Schema({
         incoming:{type:Array,default:[]},
         outgoing:{type:Array,default:[]}
     },
-    isAdmin: {
-        type: Boolean,
-        default: false
+    role: {
+        type:String,
+        enum: ["user","admin"],
+        default: "user"
     },
     city: {
         type: String,

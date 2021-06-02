@@ -18,12 +18,13 @@ passport.use(new GoogleStrategy({
           return done(err, profile);
       });
   } else {
-      await User.create({ 
+        User.create({ 
         googleId: profile.id,
         email: profile._json.email,
         name:profile._json.name,
         profilePicture:profile._json.picture,
-        friendRequests: [{incoming:[]},{outgoing:[]}]
+        friendRequests: [{incoming:[]},{outgoing:[]}],
+        username: profile.displayName,
        }, function (err, user) {
           return done(err, profile);
       })

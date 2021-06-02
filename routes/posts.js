@@ -43,7 +43,7 @@ router.delete("/:id", async (req, res) => {
     const currentUser = await User.findOne({ email: req.user?._json?.email });
     try {
         const post = await Post.findById(req.params.id);
-        if (post.userId.toString() === currentUser._id.toString()||currentUser.isAdmin) {
+        if (post.userId.toString() === currentUser._id.toString()|| currentUser.role === "admin") {
             await post.deleteOne();
             res.status(200).json("the post has been deleted")
         } else {
@@ -118,7 +118,9 @@ router.get("/post/all", async (req, res) => {
                 return Post.find({ userId: id }).sort({ createdAt: -1 });
             })
         );
-        res.status(200).json(userPosts.concat(...friendPosts).slice(page*10-10,page*10))
+        res.status(200).json(userPosts.concat(...friendPosts).sort((p1,p2)=>{
+            return new Date(p2.createdAt) - new Date(p1.createdAt)
+        }).slice(page*10-10,page*10))
         
     } catch (err) {
         res.status(400).json(err)
