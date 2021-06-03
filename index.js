@@ -30,6 +30,7 @@ app.use(cors({
     origin: "http://localhost:3000",
     credentials: true
 }));
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,

@@ -110,9 +110,7 @@ router.get("/post/all", async (req, res) => {
     let page = req.query.page;
     try {
         const currentUser = await User.findOne({ email: req.user?._json?.email });
-
         const userPosts = await Post.find({ userId: currentUser._id }).sort({ createdAt: -1 })
-
         const friendPosts = await Promise.all(
             currentUser.friends.map((id) => {
                 return Post.find({ userId: id }).sort({ createdAt: -1 });
@@ -126,6 +124,21 @@ router.get("/post/all", async (req, res) => {
         res.status(400).json(err)
     }
 })
+//get flagged posts
+router.get("/posts/flagged", async(req,res)=>{
+    const currentUser = await User.findOne({ email: req.user?._json?.email });
+    try{
+        if(currentUser.role === "admin"){
+            const posts = await Post.find({flagged:{$ne:[]}}).sort({createdAt: -1});
+            res.status(200).json(posts)
+        }else{
+            res.status(401).json("you are not admin")
+        }
+    }catch(err){
+        res.status(400).json(err)
+    }
+})
+
 //post a comment
 router.put("/:id/comment", async (req, res) => {
     const currentUser = await User.findOne({ email: req.user?._json?.email })
