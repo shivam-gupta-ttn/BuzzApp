@@ -43,12 +43,12 @@ const UserSchema = new mongoose.Schema({
         default: []
     },
     friendRequests: {
-        incoming:{type:Array,default:[]},
-        outgoing:{type:Array,default:[]}
+        incoming: { type: Array, default: [] },
+        outgoing: { type: Array, default: [] }
     },
     role: {
-        type:String,
-        enum: ["user","admin"],
+        type: String,
+        enum: ["user", "admin"],
         default: "user"
     },
     city: {

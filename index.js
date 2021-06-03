@@ -15,7 +15,7 @@ const postRoute = require("./routes/posts");
 const app = express();
 dotenv.config();
 
-mongoose.connect('mongodb+srv://shivamttn:shivam123@cluster0.kg8bx.mongodb.net/myFirstDatabase?retryWrites=true&w=majority', {useNewUrlParser: true},()=>{
+mongoose.connect('mongodb+srv://shivamttn:shivam123@cluster0.kg8bx.mongodb.net/myFirstDatabase?retryWrites=true&w=majority', { useNewUrlParser: true }, () => {
     console.log("connect to MongoDB")
 });
 require("./passport-setup")
@@ -27,8 +27,8 @@ app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
 app.use(cors({
-    origin:"http://localhost:3000",
-    credentials:true
+    origin: "http://localhost:3000",
+    credentials: true
 }));
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -40,33 +40,35 @@ app.use(passport.session());
 
 app.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })
-    );
+);
 
-app.get('/auth/google/buzz',(req,res,next)=>{console.log("reached")
-next(); },
-    passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login',successRedirect:'http://localhost:3000/home' }),
-    );
+app.get('/auth/google/buzz', (req, res, next) => {
+    console.log("reached")
+    next();
+},
+    passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login', successRedirect: 'http://localhost:3000/home' }),
+);
 
-app.get('/', isLoggedIn, (req,res)=>{
+app.get('/', isLoggedIn, (req, res) => {
     res.send("Successfully logged in")
 })
-app.get('/logout',(req,res)=>{
+app.get('/logout', (req, res) => {
     req.session.destroy(function (err) {
-      res.redirect('http://localhost:3000/login');
-     });
-  })
+        res.redirect('http://localhost:3000/login');
+    });
+})
 
-app.use("/api/users",userRoute);
-app.use("/api/auth",authRoute);
-app.use("/api/posts",postRoute);
+app.use("/api/users", userRoute);
+app.use("/api/auth", authRoute);
+app.use("/api/posts", postRoute);
 
 
 
-function isLoggedIn(req,res,next){
+function isLoggedIn(req, res, next) {
     console.log(req.isAuthenticated())
     req.isAuthenticated() ? next() : res.sendStatus(401)
 }
 
-app.listen(5500,()=>{
+app.listen(5500, () => {
     console.log("server is running!")
 })

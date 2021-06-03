@@ -63,7 +63,7 @@ router.put("/verify/user", async (req, res) => {
         } else {
             res.status(400).json("you are already admin")
         }
-    }catch(err){
+    } catch (err) {
         res.status(400).json(err)
     }
 })
