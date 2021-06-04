@@ -4,7 +4,6 @@ const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const passport = require("passport");
-const bodyParser = require("body-parser");
 const session = require('express-session')
 const cors = require('cors')
 
@@ -22,7 +21,6 @@ require("./passport-setup")
 
 //middlewares
 
-app.use(bodyParser.json());
 app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));

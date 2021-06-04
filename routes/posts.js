@@ -3,14 +3,14 @@ const Post = require("../models/post")
 const User = require("../models/user")
 //create a post 
 
-router.post("/:id/post", async (req, res) => {
-    console.log(req.body)
+router.post("/post", async (req, res) => {
+    const currentUser = await User.findOne({ email: req.user?._json?.email });
     if (req.body.desc === "" && req.body.imgId === "") {
         res.status(400).json("Invalid Post or Post cannot be empty String")
     } else {
         try {
             const newPost = new Post({
-                userId: req.params.id,
+                userId: currentUser._id,
                 desc: req.body.desc,
                 imgId: req.body.imgId
             })
@@ -108,33 +108,32 @@ router.get("/:id", async (req, res) => {
 router.get("/post/all", async (req, res) => {
     console.log(req.query)
     let page = req.query.page;
+    const currentUser = await User.findOne({ email: req.user?._json?.email });
+    
     try {
-        const currentUser = await User.findOne({ email: req.user?._json?.email });
-        const userPosts = await Post.find({ userId: currentUser._id }).sort({ createdAt: -1 })
-        const friendPosts = await Promise.all(
-            currentUser.friends.map((id) => {
-                return Post.find({ userId: id }).sort({ createdAt: -1 });
-            })
-        );
-        res.status(200).json(userPosts.concat(...friendPosts).sort((p1, p2) => {
-            return new Date(p2.createdAt) - new Date(p1.createdAt)
-        }).slice(page * 10 - 10, page * 10))
+        const idArray = [currentUser._id]
+        const ids = idArray.concat(currentUser.friends);
+        console.log(idArray)
+        const allPosts = await Post.find({userId:{$in: ids}}).skip(page * 10 - 10).limit(10).sort({createdAt: -1})
+        res.status(200).json(allPosts)
 
     } catch (err) {
         res.status(400).json(err)
     }
 })
 //get flagged posts
-router.get("/posts/flagged", async(req,res)=>{
+router.get("/posts/flagged", async (req, res) => {
+    let adminPage = req.query.adminPage;
+    console.log(adminPage)
     const currentUser = await User.findOne({ email: req.user?._json?.email });
-    try{
-        if(currentUser.role === "admin"){
-            const posts = await Post.find({flagged:{$ne:[]}}).sort({createdAt: -1});
+    try {
+        if (currentUser.role === "admin") {
+            const posts = await Post.find({ flagged: { $ne: [] } }).skip(adminPage * 10 - 10).limit(10);
             res.status(200).json(posts)
-        }else{
+        } else {
             res.status(401).json("you are not admin")
         }
-    }catch(err){
+    } catch (err) {
         res.status(400).json(err)
     }
 })

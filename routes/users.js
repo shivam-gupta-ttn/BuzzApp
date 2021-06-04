@@ -32,6 +32,7 @@ router.put("/:id", async (req, res) => {
 //get current user
 router.get("/currentuser", async (req, res) => {
     try {
+        console.log(req.user)
         const currentUser = await User.findOne({ email: req.user?._json?.email })
         res.status(200).json(currentUser)
 
