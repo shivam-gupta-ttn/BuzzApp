@@ -4,13 +4,12 @@ const User = require("../models/user")
 //create a post 
 
 router.post("/post", async (req, res) => {
-    const currentUser = await User.findOne({ email: req.user?._json?.email });
     if (req.body.desc === "" && req.body.imgId === "") {
         res.status(400).json("Invalid Post or Post cannot be empty String")
     } else {
         try {
             const newPost = new Post({
-                userId: currentUser._id,
+                userId: req.user._id,
                 desc: req.body.desc,
                 imgId: req.body.imgId
             })
@@ -23,27 +22,26 @@ router.post("/post", async (req, res) => {
 })
 //update a post
 
-router.put("/:id", async (req, res) => {
-    try {
-        const post = await Post.findById(req.params.id);
-        if (post.userId === req.body.userId) {
-            await post.updateOne({ $set: req.body })
-            res.status(200).json("the post has been updated")
-        } else {
-            res.status(403).json("You can update only your post")
-        }
-    }
-    catch (err) {
-        res.status(400).json(err)
-    }
-})
+// router.put("/:id", async (req, res) => {
+//     try {
+//         const post = await Post.findById(req.params.id);
+//         if (post.userId === req.user._id) {
+//             await post.updateOne({ $set: req.body })
+//             res.status(200).json("the post has been updated")
+//         } else {
+//             res.status(403).json("You can update only your post")
+//         }
+//     }
+//     catch (err) {
+//         res.status(400).json(err)
+//     }
+// })
 
 //delete a post
 router.delete("/:id", async (req, res) => {
-    const currentUser = await User.findOne({ email: req.user?._json?.email });
     try {
         const post = await Post.findById(req.params.id);
-        if (post.userId.toString() === currentUser._id.toString() || currentUser.role === "admin") {
+        if (post.userId.toString() === req.user._id.toString() || req.user.role === "admin") {
             await post.deleteOne();
             res.status(200).json("the post has been deleted")
         } else {
@@ -56,18 +54,17 @@ router.delete("/:id", async (req, res) => {
 })
 //like a post
 router.put("/:id/like", async (req, res) => {
-    const currentUser = await User.findOne({ email: req.user?._json?.email })
     try {
         const post = await Post.findById(req.params.id);
-        if (!post.likes.includes(currentUser._id)) {
-            if (!post.dislikes.includes(currentUser._id)) {
-                await post.updateOne({ $push: { likes: currentUser._id } });
+        if (!post.likes.includes(req.user._id)) {
+            if (!post.dislikes.includes(req.user._id)) {
+                await post.updateOne({ $push: { likes: req.user._id } });
                 res.status(201).json("the post has been liked")
             } else {
                 res.status(403).json("the post is disliked by you")
             }
         } else {
-            await post.updateOne({ $pull: { likes: currentUser._id } })
+            await post.updateOne({ $pull: { likes: req.user._id } })
             res.status(200).json("the post has been removed from likes")
         }
     } catch (err) {
@@ -76,18 +73,17 @@ router.put("/:id/like", async (req, res) => {
 })
 //dislike a post
 router.put("/:id/dislike", async (req, res) => {
-    const currentUser = await User.findOne({ email: req.user?._json?.email })
     try {
         const post = await Post.findById(req.params.id);
-        if (!post.dislikes.includes(currentUser._id)) {
-            if (!post.likes.includes(currentUser._id)) {
-                await post.updateOne({ $push: { dislikes: currentUser._id } });
+        if (!post.dislikes.includes(req.user._id)) {
+            if (!post.likes.includes(req.user._id)) {
+                await post.updateOne({ $push: { dislikes: req.user._id } });
                 res.status(201).json("the post has been disliked")
             } else {
                 res.status(403).json("The post is liked by you")
             }
         } else {
-            await post.updateOne({ $pull: { dislikes: currentUser._id } })
+            await post.updateOne({ $pull: { dislikes: req.user._id } })
             res.status(200).json("the post has been removed from dislikes")
         }
     } catch (err) {
@@ -108,11 +104,10 @@ router.get("/:id", async (req, res) => {
 router.get("/post/all", async (req, res) => {
     console.log(req.query)
     let page = req.query.page;
-    const currentUser = await User.findOne({ email: req.user?._json?.email });
     
     try {
-        const idArray = [currentUser._id]
-        const ids = idArray.concat(currentUser.friends);
+        const idArray = [req.user._id]
+        const ids = idArray.concat(req.user.friends);
         console.log(idArray)
         const allPosts = await Post.find({userId:{$in: ids}}).skip(page * 10 - 10).limit(10).sort({createdAt: -1})
         res.status(200).json(allPosts)
@@ -125,9 +120,8 @@ router.get("/post/all", async (req, res) => {
 router.get("/posts/flagged", async (req, res) => {
     let adminPage = req.query.adminPage;
     console.log(adminPage)
-    const currentUser = await User.findOne({ email: req.user?._json?.email });
     try {
-        if (currentUser.role === "admin") {
+        if (req.user.role === "admin") {
             const posts = await Post.find({ flagged: { $ne: [] } }).skip(adminPage * 10 - 10).limit(10);
             res.status(200).json(posts)
         } else {
@@ -140,9 +134,8 @@ router.get("/posts/flagged", async (req, res) => {
 
 //post a comment
 router.put("/:id/comment", async (req, res) => {
-    const currentUser = await User.findOne({ email: req.user?._json?.email })
     try {
-        const post = await Post.findByIdAndUpdate(req.params.id, { $push: { comments: { comment: req.body.value, commentedBy: currentUser._id } } })
+        const post = await Post.findByIdAndUpdate(req.params.id, { $push: { comments: { comment: req.body.value, commentedBy: req.user._id } } })
         res.status(200).json(post)
     } catch (err) {
         res.status(400).json(err)
@@ -150,11 +143,10 @@ router.put("/:id/comment", async (req, res) => {
 })
 //flag a post
 router.put("/:id/flag", async (req, res) => {
-    const currentUser = await User.findOne({ email: req.user?._json?.email });
     const post = await Post.findById(req.params.id)
     try {
-        if (!post.flagged.includes(currentUser._id)) {
-            await post.updateOne({ $push: { flagged: currentUser._id } })
+        if (!post.flagged.includes(req.user._id)) {
+            await post.updateOne({ $push: { flagged: req.user._id } })
             res.status(200).json("Post flagged successfully")
         } else {
             res.status(200).json("you already flagged this post")

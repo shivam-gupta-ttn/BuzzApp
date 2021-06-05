@@ -15,7 +15,7 @@ passport.use(new GoogleStrategy({
         if (await User.exists({ googleId: profile.id })) {
             await User.findOne({ googleId: profile.id }, function (err, user) {
                 console.log(err)
-                return done(err, profile);
+                return done(err, user);
             });
         } else {
             User.create({
@@ -26,7 +26,7 @@ passport.use(new GoogleStrategy({
                 friendRequests: [{ incoming: [] }, { outgoing: [] }],
                 username: profile.displayName,
             }, function (err, user) {
-                return done(err, profile);
+                return done(err, user);
             })
         }
     }

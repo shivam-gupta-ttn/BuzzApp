@@ -42,8 +42,7 @@ router.post("/login", async (req, res) => {
 })
 router.get("/check", async (req, res) => {
     if (req.isAuthenticated()) {
-        const newUser = await User.findOne({ email: req.user?._json?.email })
-        res.send(newUser);
+        res.status(200).json("Authenticated");
     } else {
         console.log("not authenticated")
         res.status(401).send("not autticated");
