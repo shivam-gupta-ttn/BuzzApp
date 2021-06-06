@@ -7,7 +7,7 @@ router.put("/:id", async (req, res) => {
     if (req.user._id.toString() === req.params.id.toString()) {
         try {
             console.log("here")
-            await User.findOneAndUpdate({ email: req.user.email }, {
+            const currentUser = await User.findOneAndUpdate({ email: req.user.email }, {
                 $set: {
                     name: req.body.fname ? req.body.fname + " " + req.body.lname : "",
                     gender: req.body.gender ? req.body.gender : "",
@@ -20,7 +20,7 @@ router.put("/:id", async (req, res) => {
                     profilePicture: req.body.profilePicture ? req.body.profilePicture : user.profilePicture
                 }
             });
-            res.status(200).json("Account has been updated")
+            res.status(200).json(currentUser)
         } catch (err) {
             return res.status(400).json(err);
         }
@@ -96,10 +96,12 @@ router.put("/:id/addfriend", async (req, res) => {
 //remove Friend
 router.put("/:id/removefriend", async (req, res) => {
     try {
-    const user = await User.findById(req.params.id);
-        if (req.user.friends.includes(req.params.id)) {
-            await User.updateOne({ email: req.user.email }, { $pull: { friends: req.params.id } })
+        const currentUser = await User.findOne({ email: req.user.email })
+        const user = await User.findById(req.params.id);
+        if (currentUser.friends.includes(req.params.id)) {
+            await currentUser.updateOne({ $pull: { friends: req.params.id } })
             await user.updateOne({ $pull: { friends: req.user._id } })
+            res.status(200).json("user removed!!")
         } else {
             res.status(401).json("user is not your friend")
         }
@@ -132,7 +134,7 @@ router.put("/:id/accept", async (req, res) => {
 //reject request
 router.put("/:id/reject", async (req, res) => {
     try {
-    const user = await User.findById(req.params.id);
+        const user = await User.findById(req.params.id);
         if (req.user.friendRequests.incoming.includes(req.params.id)) {
             if (user.friendRequests.outgoing.includes(req.user._id)) {
                 await User.updateOne({ email: req.user.email }, { $pull: { 'friendRequests.incoming': req.params.id } })
@@ -152,14 +154,14 @@ router.put("/:id/reject", async (req, res) => {
 router.get("/suggestions/all", async (req, res) => {
 
     try {
-        const currentUser = await User.findOne({email:req.user.email})
+        const currentUser = await User.findOne({ email: req.user.email })
         let fIds = currentUser.friends.slice()
         fIds.push(req.user._id)
-        const suggestedFriends = await User.find({_id:{$nin : fIds}})
-        console.log("suggested user",suggestedFriends)
+        const suggestedFriends = await User.find({ _id: { $nin: fIds } })
+        console.log("suggested user", suggestedFriends)
         // const allUsers = await User.find({}, { _id: 1 })
         // let suggestedFriends = []
-        
+
         // allUsers.forEach((obj) => {
         //     if (req.user.friends.indexOf(obj._id) == -1) {
         //         suggestedFriends.push(obj._id)
@@ -185,13 +187,13 @@ router.get("/suggestions/all", async (req, res) => {
 //friends
 router.get("/friends/all", async (req, res) => {
     try {
-        const currentUser = await User.findOne({email:req.user.email})
+        const currentUser = await User.findOne({ email: req.user.email })
         console.log(currentUser)
         // const friendIds = req.user.friends   
         // console.log("this",req.user.friends)
         console.log(currentUser.friends)
-        const friends = await User.find({ _id: {$in:currentUser.friends} })
-        console.log("friends",friends)
+        const friends = await User.find({ _id: { $in: currentUser.friends } })
+        console.log("friends", friends)
         res.status(200).json(friends)
     } catch (err) {
         res.status(401).json(err)

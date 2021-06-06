@@ -106,8 +106,9 @@ router.get("/post/all", async (req, res) => {
     let page = req.query.page;
     
     try {
+        const currentUser = await User.findOne({email:req.user.email})
         const idArray = [req.user._id]
-        const ids = idArray.concat(req.user.friends);
+        const ids = idArray.concat(currentUser.friends);
         console.log(idArray)
         const allPosts = await Post.find({userId:{$in: ids}}).skip(page * 10 - 10).limit(10).sort({createdAt: -1})
         res.status(200).json(allPosts)
