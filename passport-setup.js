@@ -12,22 +12,27 @@ passport.use(new GoogleStrategy({
     callbackURL: "http://localhost:5500/auth/google/buzz"
 },
     async function (accessToken, refreshToken, profile, done) {
-        if (await User.exists({ googleId: profile.id })) {
-            await User.findOne({ googleId: profile.id }, function (err, user) {
-                console.log(err)
-                return done(err, user);
-            });
-        } else {
-            User.create({
-                googleId: profile.id,
-                email: profile._json.email,
-                name: profile._json.name,
-                profilePicture: profile._json.picture,
-                friendRequests: [{ incoming: [] }, { outgoing: [] }],
-                username: profile.displayName,
-            }, function (err, user) {
-                return done(err, user);
-            })
+        console.log(profile)
+        if (profile._json.hd === "tothenew.com") {
+            if (await User.exists({ googleId: profile.id })) {
+                await User.findOne({ googleId: profile.id }, function (err, user) {
+                    console.log(err)
+                    return done(err, user);
+                });
+            } else {
+                User.create({
+                    googleId: profile.id,
+                    email: profile._json.email,
+                    name: profile._json.name,
+                    profilePicture: profile._json.picture,
+                    friendRequests: [{ incoming: [] }, { outgoing: [] }],
+                    username: profile.displayName,
+                }, function (err, user) {
+                    return done(err, user);
+                })
+            }
+        }else{
+            done(new Error("Only tothenew.com"))
         }
     }
 ));
